@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Animated,
   Platform,
@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Button,
 } from "react-native";
 
 type GalleryItem = {
@@ -15,51 +16,15 @@ type GalleryItem = {
 };
 
 const gallery: GalleryItem[] = [
-  {
-    id: 1,
-    main: "https://i.pinimg.com/736x/75/92/db/7592db5a2192b56c77f264b6dbc08adf.jpg",
-    alt: "https://i.pinimg.com/736x/0e/f2/bc/0ef2bca247bb66f486b0989809d3cabc.jpg",
-  },
-  {
-    id: 2,
-    main: "https://i.pinimg.com/736x/2b/a2/15/2ba21552ecf27b4cc8bad065f7966d7c.jpg",
-    alt: "https://i.pinimg.com/736x/93/ed/c7/93edc709f49fe9492b30c236d755d2d0.jpg",
-  },
-  {
-    id: 3,
-    main: "https://i.pinimg.com/736x/00/85/d4/0085d41dc397a01100ba57ff343fcaf4.jpg",
-    alt: "https://i.pinimg.com/1200x/9c/37/77/9c377772ff3772252d204dec58954e5f.jpg",
-  },
-  {
-    id: 4,
-    main: "https://i.pinimg.com/736x/fb/e5/24/fbe524e8c4ff4db3a2b43d34f4d72beb.jpg",
-    alt: "https://i.pinimg.com/736x/0c/e5/97/0ce5977b1decf5a9355e6198edb8135a.jpg",
-  },
-  {
-    id: 5,
-    main: "https://i.pinimg.com/736x/bd/43/9b/bd439b9c262f26862db5f38013fd5247.jpg",
-    alt: "https://i.pinimg.com/736x/00/9d/f9/009df9a07a54f00afc6cc6406476974a.jpg",
-  },
-  {
-    id: 6,
-    main: "https://i.pinimg.com/736x/31/40/da/3140da0b7432043a241c9cea23c2185b.jpg",
-    alt: "https://i.pinimg.com/736x/6b/ae/6e/6bae6e627c649815c67b35a524638b77.jpg",
-  },
-  {
-    id: 7,
-    main: "https://i.pinimg.com/736x/a2/e9/68/a2e968998a3036344752dda71777cefb.jpg",
-    alt: "https://i.pinimg.com/736x/5c/21/bd/5c21bdb6c78c578ca40995ec4995b09a.jpg",
-  },
-  {
-    id: 8,
-    main: "https://i.pinimg.com/736x/4f/b8/0b/4fb80bacc421a8989205f2b1716be080.jpg",
-    alt: "https://i.pinimg.com/736x/95/f6/3e/95f63e785f4bc9202ae94661f7e2bba3.jpg",
-  },
-  {
-    id: 9,
-    main: "https://i.pinimg.com/736x/24/17/3e/24173e5c27cd4d0bcacbefb110ae4b6b.jpg",
-    alt: "https://i.pinimg.com/736x/bb/a3/43/bba3435144a1b85de0b7e778df5722fd.jpg",
-  },
+  { id: 1, main: "https://i.pinimg.com/736x/75/92/db/7592db5a2192b56c77f264b6dbc08adf.jpg", alt: "https://i.pinimg.com/736x/0e/f2/bc/0ef2bca247bb66f486b0989809d3cabc.jpg" },
+  { id: 2, main: "https://i.pinimg.com/736x/2b/a2/15/2ba21552ecf27b4cc8bad065f7966d7c.jpg", alt: "https://i.pinimg.com/736x/93/ed/c7/93edc709f49fe9492b30c236d755d2d0.jpg" },
+  { id: 3, main: "https://i.pinimg.com/736x/00/85/d4/0085d41dc397a01100ba57ff343fcaf4.jpg", alt: "https://i.pinimg.com/1200x/9c/37/77/9c377772ff3772252d204dec58954e5f.jpg" },
+  { id: 4, main: "https://i.pinimg.com/736x/fb/e5/24/fbe524e8c4ff4db3a2b43d34f4d72beb.jpg", alt: "https://i.pinimg.com/736x/0c/e5/97/0ce5977b1decf5a9355e6198edb8135a.jpg" },
+  { id: 5, main: "https://i.pinimg.com/736x/bd/43/9b/bd439b9c262f26862db5f38013fd5247.jpg", alt: "https://i.pinimg.com/736x/00/9d/f9/009df9a07a54f00afc6cc6406476974a.jpg" },
+  { id: 6, main: "https://i.pinimg.com/736x/31/40/da/3140da0b7432043a241c9cea23c2185b.jpg", alt: "https://i.pinimg.com/736x/6b/ae/6e/6bae6e627c649815c67b35a524638b77.jpg" },
+  { id: 7, main: "https://i.pinimg.com/736x/a2/e9/68/a2e968998a3036344752dda71777cefb.jpg", alt: "https://i.pinimg.com/736x/5c/21/bd/5c21bdb6c78c578ca40995ec4995b09a.jpg" },
+  { id: 8, main: "https://i.pinimg.com/736x/4f/b8/0b/4fb80bacc421a8989205f2b1716be080.jpg", alt: "https://i.pinimg.com/736x/95/f6/3e/95f63e785f4bc9202ae94661f7e2bba3.jpg" },
+  { id: 9, main: "https://i.pinimg.com/736x/24/17/3e/24173e5c27cd4d0bcacbefb110ae4b6b.jpg", alt: "https://i.pinimg.com/736x/bb/a3/43/bba3435144a1b85de0b7e778df5722fd.jpg" },
 ];
 
 export default function ImageGrid() {
@@ -67,7 +32,17 @@ export default function ImageGrid() {
   const [scaleMap, setScaleMap] = useState<{ [key: number]: number }>({});
   const [loadStatus, setLoadStatus] = useState<{ [key: number]: boolean }>({});
   const [errorFlags, setErrorFlags] = useState<{ [key: number]: boolean }>({});
+  const [parseError, setParseError] = useState(false);
   const scaleAnim = useRef<{ [key: number]: Animated.Value }>({});
+
+  useEffect(() => {
+    // Simulasi parsing AI response
+    try {
+      JSON.parse("{ malformed json }");
+    } catch (err) {
+      setParseError(true);
+    }
+  }, []);
 
   const initAnimValue = (id: number): Animated.Value => {
     if (!scaleAnim.current[id]) {
@@ -77,33 +52,25 @@ export default function ImageGrid() {
   };
 
   const onImageTap = (id: number) => {
-    const current = scaleMap[id] || 1;
+    // Jika parsing gagal, jangan lanjut
+    if (parseError) return;
 
-    // Jika sudah 2x zoom, reset ke awal
+    const current = scaleMap[id] || 1;
     if (current >= 2) {
       setScaleMap((prev) => ({ ...prev, [id]: 1 }));
       setToggleAltImage((prev) => ({ ...prev, [id]: false }));
-
-      Animated.timing(initAnimValue(id), {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      Animated.timing(initAnimValue(id), { toValue: 1, duration: 300, useNativeDriver: true }).start();
       return;
     }
 
-    // Jika belum 2x, toggle ALT dan naikkan zoom
     const nextAlt = !toggleAltImage[id];
     const nextScale = Math.min(current * 1.2, 2);
 
     setToggleAltImage((prev) => ({ ...prev, [id]: nextAlt }));
     setScaleMap((prev) => ({ ...prev, [id]: nextScale }));
+    setLoadStatus((prev) => ({ ...prev, [id]: true }));
 
-    Animated.timing(initAnimValue(id), {
-      toValue: nextScale,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+    Animated.timing(initAnimValue(id), { toValue: nextScale, duration: 300, useNativeDriver: true }).start();
   };
 
   const onImageFail = (id: number) => {
@@ -112,6 +79,7 @@ export default function ImageGrid() {
   };
 
   const onImageSuccess = (id: number) => {
+    setErrorFlags((prev) => ({ ...prev, [id]: false }));
     setLoadStatus((prev) => ({ ...prev, [id]: false }));
   };
 
@@ -125,13 +93,8 @@ export default function ImageGrid() {
       const isPending = loadStatus[img.id];
 
       return (
-        <TouchableOpacity
-          key={img.id}
-          style={styles.card}
-          onPress={() => onImageTap(img.id)}
-          activeOpacity={0.85}
-        >
-          <Animated.View style={[styles.imageBox, { transform: [{ scale: animVal }] }]}>
+        <TouchableOpacity key={img.id} style={styles.card} onPress={() => onImageTap(img.id)} activeOpacity={0.85}>
+          <Animated.View style={[styles.imageBox, { transform: [{ scale: animVal }] }]}>  
             {hasErr ? (
               <View style={styles.errorBox}>
                 <Text style={styles.errorIcon}>⚠️</Text>
@@ -146,27 +109,9 @@ export default function ImageGrid() {
                   </View>
                 )}
                 {Platform.OS === "web" ? (
-                  <img
-                    src={uri}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      opacity: isPending ? 0 : 1,
-                      borderRadius: 8,
-                    }}
-                    onError={() => onImageFail(img.id)}
-                    onLoad={() => onImageSuccess(img.id)}
-                    alt=""
-                  />
+                  <img src={uri} style={styles.webImg(isPending)} onError={() => onImageFail(img.id)} onLoad={() => onImageSuccess(img.id)} alt="" />
                 ) : (
-                  <Animated.Image
-                    source={{ uri }}
-                    style={[styles.img, { opacity: isPending ? 0 : 1 }]}
-                    resizeMode="cover"
-                    onError={() => onImageFail(img.id)}
-                    onLoad={() => onImageSuccess(img.id)}
-                  />
+                  <Animated.Image source={{ uri }} style={[styles.img, { opacity: isPending ? 0 : 1 }]} resizeMode="cover" onError={() => onImageFail(img.id)} onLoad={() => onImageSuccess(img.id)} />
                 )}
               </>
             )}
@@ -186,6 +131,16 @@ export default function ImageGrid() {
       );
     });
 
+  if (parseError) {
+    return (
+      <View style={styles.screen}>
+        <Text style={styles.header}>Error</Text>
+        <Text style={styles.errorMsg}>Unable to parse AI response</Text>
+        <Button title="Retry" onPress={() => setParseError(false)} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <Text style={styles.header}>ALIF- Galeri</Text>
@@ -193,105 +148,25 @@ export default function ImageGrid() {
       <View style={styles.wrapper}>{buildGrid()}</View>
     </View>
   );
-
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#f1f1f1",
-    paddingTop: 40,
-    alignItems: "center",
-  },
-  header: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#222",
-    marginBottom: 8,
-  },
-  desc: {
-    fontSize: 14,
-    color: "#555",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  wrapper: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    width: 330,
-  },
-  card: {
-    width: 100,
-    height: 100,
-    margin: 5,
-  },
-  imageBox: {
-    flex: 1,
-    backgroundColor: "#ccc",
-    borderRadius: 8,
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  img: {
-    width: "100%",
-    height: "100%",
-  },
-  scaleBadge: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  scaleTxt: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  altLabel: {
-    position: "absolute",
-    top: 6,
-    left: 6,
-    backgroundColor: "rgba(255,120,0,0.9)",
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  altTxt: {
-    color: "#fff",
-    fontSize: 9,
-    fontWeight: "bold",
-  },
-  errorBox: {
-    flex: 1,
-    backgroundColor: "#fdd",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorIcon: {
-    fontSize: 22,
-  },
-  errorMsg: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#b00",
-  },
-  loadingBox: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#cce5ff",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingIcon: {
-    fontSize: 20,
-  },
-  loadingMsg: {
-    fontSize: 10,
-    color: "#004085",
-    fontWeight: "bold",
-  },
+  screen: { flex: 1, backgroundColor: "#f1f1f1", paddingTop: 40, alignItems: "center" },
+  header: { fontSize: 22, fontWeight: "700", color: "#222", marginBottom: 8 },
+  desc: { fontSize: 14, color: "#555", textAlign: "center", marginBottom: 20 },
+  wrapper: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", width: 330 },
+  card: { width: 100, height: 100, margin: 5 },
+  imageBox: { flex: 1, backgroundColor: "#ccc", borderRadius: 8, overflow: "hidden", justifyContent: "center", alignItems: "center" },
+  img: { width: "100%", height: "100%" },
+  webImg: (pending: boolean) => ({ width: "100%", height: "100%", objectFit: "cover", opacity: pending ? 0 : 1, borderRadius: 8 }),
+  scaleBadge: { position: "absolute", top: 6, right: 6, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 },
+  scaleTxt: { color: "#fff", fontSize: 10, fontWeight: "bold" },
+  altLabel: { position: "absolute", top: 6, left: 6, backgroundColor: "rgba(255,120,0,0.9)", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 },
+  altTxt: { color: "#fff", fontSize: 9, fontWeight: "bold" },
+  errorBox: { flex: 1, backgroundColor: "#fdd", justifyContent: "center", alignItems: "center" },
+  errorIcon: { fontSize: 22 },
+  errorMsg: { fontSize: 14, fontWeight: "bold", color: "#b00", marginTop: 8 },
+  loadingBox: { ...StyleSheet.absoluteFillObject, backgroundColor: "#cce5ff", justifyContent: "center", alignItems: "center" },
+  loadingIcon: { fontSize: 20 },
+  loadingMsg: { fontSize: 10, color: "#004085", fontWeight: "bold" },
 });
