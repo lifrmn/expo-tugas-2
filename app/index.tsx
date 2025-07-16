@@ -24,30 +24,36 @@ const gallery: GalleryItem[] = [
 ];
 
 export default function ImageGrid() {
+  // State untuk toggle gambar ALT/main per item
   const [toggleAltImage, setToggleAltImage] = useState<{ [key: number]: boolean }>({});
+  // State untuk menyimpan skala (zoom) per item
   const [scaleMap, setScaleMap] = useState<{ [key: number]: number }>({});
+  // State untuk loading indicator per item
   const [loadStatus, setLoadStatus] = useState<{ [key: number]: boolean }>({});
-  const [errorFlags, setErrorFlags] = useState<{ [key: number]: boolean }>({});
+  // State untuk menangani error parsing AI
   const [parseError, setParseError] = useState(false);
+  // Flags untuk error load gambar per item
+  const [errorFlags, setErrorFlags] = useState<{ [key: number]: boolean }>({});
+  // Ref untuk Animated.Value per item
   const scaleAnim = useRef<{ [key: number]: Animated.Value }>({});
 
-  // Initialize state for each image
+  // Inisialisasi semua state pada mount
   useEffect(() => {
     const initLoad: { [key: number]: boolean } = {};
     const initScale: { [key: number]: number } = {};
     const initAlt: { [key: number]: boolean } = {};
 
     gallery.forEach((img) => {
-      initLoad[img.id] = true;
-      initScale[img.id] = 1;
-      initAlt[img.id] = false;
+      initLoad[img.id] = true;     // tampilkan loading awal
+      initScale[img.id] = 1;        // set zoom awal
+      initAlt[img.id] = false;      // tampilkan main image awal
     });
 
     setLoadStatus(initLoad);
     setScaleMap(initScale);
     setToggleAltImage(initAlt);
 
-    // Simulate AI parse error detection
+    // Simulasi parse AI response
     try {
       JSON.parse("{ malformed json }");
     } catch {
@@ -55,43 +61,47 @@ export default function ImageGrid() {
     }
   }, []);
 
+  // Ambil atau init Animated.Value untuk scaling
   const initAnimValue = (id: number) => {
     if (!scaleAnim.current[id]) scaleAnim.current[id] = new Animated.Value(1);
     return scaleAnim.current[id];
   };
 
+  // Handler tap pada gambar
   const onImageTap = (id: number) => {
-    if (parseError) return;
+    if (parseError) return; // jika error parsing, blok klik
 
-    const current = scaleMap[id];
-    const nextScale = Math.min(current * 1.2, 2);
+    const currentScale = scaleMap[id];
+    // Hitung next scale, maksimal 2x
+    const nextScale = Math.min(currentScale * 1.2, 2);
 
-    if (current >= 2) {
-      // Reset to original
-      setScaleMap((prev) => ({ ...prev, [id]: 1 }));
-      setToggleAltImage((prev) => ({ ...prev, [id]: false }));
+    if (currentScale >= 2) {
+      // Reset jika sudah 2x
+      setScaleMap((p) => ({ ...p, [id]: 1 }));
+      setToggleAltImage((p) => ({ ...p, [id]: false }));
       Animated.timing(initAnimValue(id), { toValue: 1, duration: 300, useNativeDriver: true }).start();
-      return;
+    } else {
+      // Toggle ALT/main dan update scale
+      setToggleAltImage((p) => ({ ...p, [id]: !p[id] }));
+      setScaleMap((p) => ({ ...p, [id]: nextScale }));
+      setLoadStatus((p) => ({ ...p, [id]: true }));
+      Animated.timing(initAnimValue(id), { toValue: nextScale, duration: 300, useNativeDriver: true }).start();
     }
-
-    // Toggle ALT image and update scale
-    setToggleAltImage((prev) => ({ ...prev, [id]: !prev[id] }));
-    setScaleMap((prev) => ({ ...prev, [id]: nextScale }));
-    setLoadStatus((prev) => ({ ...prev, [id]: true }));
-
-    Animated.timing(initAnimValue(id), { toValue: nextScale, duration: 300, useNativeDriver: true }).start();
   };
 
-  const onImageFail = (id: number) => {
-    setErrorFlags((prev) => ({ ...prev, [id]: true }));
-    setLoadStatus((prev) => ({ ...prev, [id]: false }));
-  };
-
+  // Handler load success
   const onImageSuccess = (id: number) => {
-    setErrorFlags((prev) => ({ ...prev, [id]: false }));
-    setLoadStatus((prev) => ({ ...prev, [id]: false }));
+    setErrorFlags((p) => ({ ...p, [id]: false }));
+    setLoadStatus((p) => ({ ...p, [id]: false }));
   };
 
+  // Handler load fail
+  const onImageFail = (id: number) => {
+    setErrorFlags((p) => ({ ...p, [id]: true }));
+    setLoadStatus((p) => ({ ...p, [id]: false }));
+  };
+
+  // Jika parsing AI gagal, tampilkan layar error
   if (parseError) {
     return (
       <View style={styles.screen}>
@@ -108,17 +118,24 @@ export default function ImageGrid() {
       <Text style={styles.desc}>Tekan gambar untuk toggle & zoom (maks 2 klik)</Text>
       <View style={styles.wrapper}>
         {gallery.map((img) => {
-          const showAlt = toggleAltImage[img.id];
-          const uri = showAlt ? img.alt : img.main;
+          const isAlt = toggleAltImage[img.id];
+          const uri = isAlt ? img.alt : img.main;
           const scale = scaleMap[img.id];
-          const anim = initAnimValue(img.id);
+          const animVal = initAnimValue(img.id);
           const pending = loadStatus[img.id];
-          const err = errorFlags[img.id];
+          const hasError = errorFlags[img.id];
 
           return (
-            <TouchableOpacity key={img.id} style={styles.card} onPress={() => onImageTap(img.id)} activeOpacity={0.85}>
-              <Animated.View style={[styles.imageBox, { transform: [{ scale: anim }] }]}>  
-                {err ? (
+            <TouchableOpacity
+              key={img.id}
+              style={styles.card}
+              onPress={() => onImageTap(img.id)}
+              activeOpacity={0.85}
+            >
+              <Animated.View
+                style={[styles.imageBox, { transform: [{ scale: animVal }] }]}
+              >
+                {hasError ? (
                   <View style={styles.errorBox}>
                     <Text style={styles.errorIcon}>⚠️</Text>
                     <Text style={styles.errorMsg}>Load gagal</Text>
@@ -132,9 +149,21 @@ export default function ImageGrid() {
                       </View>
                     )}
                     {Platform.OS === "web" ? (
-                      <img src={uri} style={styles.webImg(pending)} onError={() => onImageFail(img.id)} onLoad={() => onImageSuccess(img.id)} alt="" />
+                      <img
+                        src={uri}
+                        style={styles.webImg(pending)}
+                        onLoad={() => onImageSuccess(img.id)}
+                        onError={() => onImageFail(img.id)}
+                        alt=""
+                      />
                     ) : (
-                      <Animated.Image source={{ uri }} style={[styles.img, { opacity: pending ? 0 : 1 }]} resizeMode="cover" onError={() => onImageFail(img.id)} onLoad={() => onImageSuccess(img.id)} />
+                      <Animated.Image
+                        source={{ uri }}
+                        style={[styles.img, { opacity: pending ? 0 : 1 }]}
+                        resizeMode="cover"
+                        onLoad={() => onImageSuccess(img.id)}
+                        onError={() => onImageFail(img.id)}
+                      />
                     )}
                   </>
                 )}
@@ -145,7 +174,7 @@ export default function ImageGrid() {
                     <Text style={styles.scaleTxt}>{scale.toFixed(1)}x</Text>
                   </View>
                 )}
-                {showAlt && (
+                {isAlt && (
                   <View style={styles.altLabel}>
                     <Text style={styles.altTxt}>ALT</Text>
                   </View>
@@ -164,7 +193,7 @@ const styles = StyleSheet.create({
   header: { fontSize: 22, fontWeight: "700", color: "#222", marginBottom: 8 },
   desc: { fontSize: 14, color: "#555", textAlign: "center", marginBottom: 20 },
   wrapper: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", width: 330 },
-  card: { width: 100, height: 100, margin: 5 },
+  card: { width: 100, height: 100, margin: 5 },  // ukuran sel seragam
   imageBox: { flex: 1, backgroundColor: "#ccc", borderRadius: 8, overflow: "hidden", justifyContent: "center", alignItems: "center" },
   img: { width: "100%", height: "100%" },
   webImg: (pending: boolean) => ({ width: "100%", height: "100%", objectFit: "cover", opacity: pending ? 0 : 1, borderRadius: 8 }),
