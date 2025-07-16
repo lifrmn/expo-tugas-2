@@ -35,101 +35,52 @@ export default function ImageGrid() {
   const [parseError, setParseError] = useState(false);
   const scaleAnim = useRef<{ [key: number]: Animated.Value }>({});
 
+  // Setup initial loading state
   useEffect(() => {
-    // Simulasi parsing AI response
+    const initialLoads: { [key: number]: boolean } = {};
+    gallery.forEach((img) => (initialLoads[img.id] = true));
+    setLoadStatus(initialLoads);
+
+    // Simulate AI parse
     try {
       JSON.parse("{ malformed json }");
-    } catch (err) {
+    } catch {
       setParseError(true);
     }
   }, []);
 
   const initAnimValue = (id: number): Animated.Value => {
-    if (!scaleAnim.current[id]) {
-      scaleAnim.current[id] = new Animated.Value(1);
-    }
+    if (!scaleAnim.current[id]) scaleAnim.current[id] = new Animated.Value(1);
     return scaleAnim.current[id];
   };
 
   const onImageTap = (id: number) => {
-    // Jika parsing gagal, jangan lanjut
     if (parseError) return;
-
     const current = scaleMap[id] || 1;
+    const nextScale = Math.min(current * 1.2, 2);
+
     if (current >= 2) {
-      setScaleMap((prev) => ({ ...prev, [id]: 1 }));
-      setToggleAltImage((prev) => ({ ...prev, [id]: false }));
+      setScaleMap((p) => ({ ...p, [id]: 1 }));
+      setToggleAltImage((p) => ({ ...p, [id]: false }));
       Animated.timing(initAnimValue(id), { toValue: 1, duration: 300, useNativeDriver: true }).start();
       return;
     }
 
-    const nextAlt = !toggleAltImage[id];
-    const nextScale = Math.min(current * 1.2, 2);
-
-    setToggleAltImage((prev) => ({ ...prev, [id]: nextAlt }));
-    setScaleMap((prev) => ({ ...prev, [id]: nextScale }));
-    setLoadStatus((prev) => ({ ...prev, [id]: true }));
-
+    setToggleAltImage((p) => ({ ...p, [id]: !toggleAltImage[id] }));
+    setScaleMap((p) => ({ ...p, [id]: nextScale }));
+    setLoadStatus((p) => ({ ...p, [id]: true }));
     Animated.timing(initAnimValue(id), { toValue: nextScale, duration: 300, useNativeDriver: true }).start();
   };
 
   const onImageFail = (id: number) => {
-    setErrorFlags((prev) => ({ ...prev, [id]: true }));
-    setLoadStatus((prev) => ({ ...prev, [id]: false }));
+    setErrorFlags((p) => ({ ...p, [id]: true }));
+    setLoadStatus((p) => ({ ...p, [id]: false }));
   };
 
   const onImageSuccess = (id: number) => {
-    setErrorFlags((prev) => ({ ...prev, [id]: false }));
-    setLoadStatus((prev) => ({ ...prev, [id]: false }));
+    setErrorFlags((p) => ({ ...p, [id]: false }));
+    setLoadStatus((p) => ({ ...p, [id]: false }));
   };
-
-  const buildGrid = () =>
-    gallery.map((img) => {
-      const showAlt = toggleAltImage[img.id] || false;
-      const uri = showAlt ? img.alt : img.main;
-      const currentScale = scaleMap[img.id] || 1;
-      const animVal = initAnimValue(img.id);
-      const hasErr = errorFlags[img.id];
-      const isPending = loadStatus[img.id];
-
-      return (
-        <TouchableOpacity key={img.id} style={styles.card} onPress={() => onImageTap(img.id)} activeOpacity={0.85}>
-          <Animated.View style={[styles.imageBox, { transform: [{ scale: animVal }] }]}>  
-            {hasErr ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorIcon}>⚠️</Text>
-                <Text style={styles.errorMsg}>Load gagal</Text>
-              </View>
-            ) : (
-              <>
-                {isPending && (
-                  <View style={styles.loadingBox}>
-                    <Text style={styles.loadingIcon}>🔄</Text>
-                    <Text style={styles.loadingMsg}>Loading...</Text>
-                  </View>
-                )}
-                {Platform.OS === "web" ? (
-                  <img src={uri} style={styles.webImg(isPending)} onError={() => onImageFail(img.id)} onLoad={() => onImageSuccess(img.id)} alt="" />
-                ) : (
-                  <Animated.Image source={{ uri }} style={[styles.img, { opacity: isPending ? 0 : 1 }]} resizeMode="cover" onError={() => onImageFail(img.id)} onLoad={() => onImageSuccess(img.id)} />
-                )}
-              </>
-            )}
-
-            {currentScale > 1 && (
-              <View style={styles.scaleBadge}>
-                <Text style={styles.scaleTxt}>{currentScale.toFixed(1)}x</Text>
-              </View>
-            )}
-            {showAlt && (
-              <View style={styles.altLabel}>
-                <Text style={styles.altTxt}>ALT</Text>
-              </View>
-            )}
-          </Animated.View>
-        </TouchableOpacity>
-      );
-    });
 
   if (parseError) {
     return (
@@ -145,7 +96,54 @@ export default function ImageGrid() {
     <View style={styles.screen}>
       <Text style={styles.header}>ALIF- Galeri</Text>
       <Text style={styles.desc}>Tekan gambar untuk toggle & zoom (maks 2 klik)</Text>
-      <View style={styles.wrapper}>{buildGrid()}</View>
+      <View style={styles.wrapper}>
+        {gallery.map((img) => {
+          const showAlt = toggleAltImage[img.id] || false;
+          const uri = showAlt ? img.alt : img.main;
+          const scale = scaleMap[img.id] || 1;
+          const anim = initAnimValue(img.id);
+          const pending = loadStatus[img.id];
+          const err = errorFlags[img.id];
+
+          return (
+            <TouchableOpacity key={img.id} style={styles.card} onPress={() => onImageTap(img.id)} activeOpacity={0.85}>
+              <Animated.View style={[styles.imageBox, { transform: [{ scale: anim }] }]}>  
+                {err ? (
+                  <View style={styles.errorBox}>
+                    <Text style={styles.errorIcon}>⚠️</Text>
+                    <Text style={styles.errorMsg}>Load gagal</Text>
+                  </View>
+                ) : (
+                  <>
+                    {pending && (
+                      <View style={styles.loadingBox}>
+                        <Text style={styles.loadingIcon}>🔄</Text>
+                        <Text style={styles.loadingMsg}>Loading...</Text>
+                      </View>
+                    )}
+                    {Platform.OS === "web" ? (
+                      <img src={uri} style={styles.webImg(pending)} onError={() => onImageFail(img.id)} onLoad={() => onImageSuccess(img.id)} alt="" />
+                    ) : (
+                      <Animated.Image source={{ uri }} style={[styles.img, { opacity: pending ? 0 : 1 }]} resizeMode="cover" onError={() => onImageFail(img.id)} onLoad={() => onImageSuccess(img.id)} />
+                    )}
+                  </>
+                )}
+
+                {scale > 1 && (
+                  <View style={styles.scaleBadge}>
+                    <Text style={styles.scaleTxt}>{scale.toFixed(1)}x</Text>
+                  </View>
+                )}
+                {showAlt && (
+                  <View style={styles.altLabel}>
+                    <Text style={styles.altTxt}>ALT</Text>
+                  </View>
+                )}
+              </Animated.View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
