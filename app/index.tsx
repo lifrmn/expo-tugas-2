@@ -1,52 +1,58 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Animated,
-  Platform,
   StyleSheet,
+  View,
   Text,
   TouchableOpacity,
-  View,
+  Animated,
+  Platform,
   Button,
-} from "react-native";
+} from 'react-native';
+import { Stack } from 'expo-router';
 
 type GalleryItem = { id: number; main: string; alt: string };
 
-// 9 pairs of unique images for a 3×3 grid
-tconst gallery: GalleryItem[] = [
-  { id: 1, main: "https://i.pinimg.com/736x/75/92/db/7592db5a2192b56c77f264b6dbc08adf.jpg", alt: "https://i.pinimg.com/736x/0e/f2/bc/0ef2bca247bb66f486b0989809d3cabc.jpg" },
-  { id: 2, main: "https://i.pinimg.com/736x/2b/a2/15/2ba21552ecf27b4cc8bad065f7966d7c.jpg", alt: "https://i.pinimg.com/736x/93/ed/c7/93edc709f49fe9492b30c236d755d2d0.jpg" },
-  { id: 3, main: "https://i.pinimg.com/736x/00/85/d4/0085d41dc397a01100ba57ff343fcaf4.jpg", alt: "https://i.pinimg.com/736x/9c/37/77/9c377772ff3772252d204dec58954e5f.jpg" },
-  { id: 4, main: "https://i.pinimg.com/736x/fb/e5/24/fbe524e8c4ff4db3a2b43d34f4d72beb.jpg", alt: "https://i.pinimg.com/736x/0c/e5/97/0ce5977b1decf5a9355e6198edb8135a.jpg" },
-  { id: 5, main: "https://i.pinimg.com/736x/bd/43/9b/bd439b9c262f26862db5f38013fd5247.jpg", alt: "https://i.pinimg.com/736x/00/9d/f9/009df9a07a54f00afc6cc6406476974a.jpg" },
-  { id: 6, main: "https://i.pinimg.com/736x/31/40/da/3140da0b7432043a241c9cea23c2185b.jpg", alt: "https://i.pinimg.com/736x/6b/ae/6e/6bae6e627c649815c67b35a524638b77.jpg" },
-  { id: 7, main: "https://i.pinimg.com/736x/a2/e9/68/a2e968998a3036344752dda71777cefb.jpg", alt: "https://i.pinimg.com/736x/5c/21/bd/5c21bdb6c78c578ca40995ec4995b09a.jpg" },
-  { id: 8, main: "https://i.pinimg.com/736x/4f/b8/0b/4fb80bacc421a8989205f2b1716be080.jpg", alt: "https://i.pinimg.com/736x/95/f6/3e/95f63e785f4bc9202ae94661f7e2bba3.jpg" },
-  { id: 9, main: "https://i.pinimg.com/736x/24/17/3e/24173e5c27cd4d0bcacbefb110ae4b6b.jpg", alt: "https://i.pinimg.com/736x/bb/a3/43/bba3435144a1b85de0b7e778df5722fd.jpg" },
+// 9 unique image pairs for a 3×3 grid
+const gallery: GalleryItem[] = [
+  { id: 1, main: 'https://i.pinimg.com/736x/75/92/db/7592db5a2192b56c77f264b6dbc08adf.jpg', alt: 'https://i.pinimg.com/736x/0e/f2/bc/0ef2bca247bb66f486b0989809d3cabc.jpg' },
+  { id: 2, main: 'https://i.pinimg.com/736x/2b/a2/15/2ba21552ecf27b4cc8bad065f7966d7c.jpg', alt: 'https://i.pinimg.com/736x/93/ed/c7/93edc709f49fe9492b30c236d755d2d0.jpg' },
+  { id: 3, main: 'https://i.pinimg.com/736x/00/85/d4/0085d41dc397a01100ba57ff343fcaf4.jpg', alt: 'https://i.pinimg.com/736x/9c/37/77/9c377772ff3772252d204dec58954e5f.jpg' },
+  { id: 4, main: 'https://i.pinimg.com/736x/fb/e5/24/fbe524e8c4ff4db3a2b43d34f4d72beb.jpg', alt: 'https://i.pinimg.com/736x/0c/e5/97/0ce5977b1decf5a9355e6198edb8135a.jpg' },
+  { id: 5, main: 'https://i.pinimg.com/736x/bd/43/9b/bd439b9c262f26862db5f38013fd5247.jpg', alt: 'https://i.pinimg.com/736x/00/9d/f9/009df9a07a54f00afc6cc6406476974a.jpg' },
+  { id: 6, main: 'https://i.pinimg.com/736x/31/40/da/3140da0b7432043a241c9cea23c2185b.jpg', alt: 'https://i.pinimg.com/736x/6b/ae/6e/6bae6e627c649815c67b35a524638b77.jpg' },
+  { id: 7, main: 'https://i.pinimg.com/736x/a2/e9/68/a2e968998a3036344752dda71777cefb.jpg', alt: 'https://i.pinimg.com/736x/5c/21/bd/5c21bdb6c78c578ca40995ec4995b09a.jpg' },
+  { id: 8, main: 'https://i.pinimg.com/736x/4f/b8/0b/4fb80bacc421a8989205f2b1716be080.jpg', alt: 'https://i.pinimg.com/736x/95/f6/3e/95f63e785f4bc9202ae94661f7e2bba3.jpg' },
+  { id: 9, main: 'https://i.pinimg.com/736x/24/17/3e/24173e5c27cd4d0bcacbefb110ae4b6b.jpg', alt: 'https://i.pinimg.com/736x/bb/a3/43/bba3435144a1b85de0b7e778df5722fd.jpg' },
 ];
 
-export default function ImageGrid() {
-  const [toggleAltImage, setToggleAltImage] = useState<{ [key: number]: boolean }>({});
-  const [scaleMap, setScaleMap] = useState<{ [key: number]: number }>({});
-  const [loadStatus, setLoadStatus] = useState<{ [key: number]: boolean }>({});
-  const [errorFlags, setErrorFlags] = useState<{ [key: number]: boolean }>({});
+export default function Index() {
+  // per-item states
+  const [isAlt, setIsAlt] = useState<Record<number, boolean>>({});
+  const [scaleMap, setScaleMap] = useState<Record<number, number>>({});
+  const [loading, setLoading] = useState<Record<number, boolean>>({});
+  const [error, setError] = useState<Record<number, boolean>>({});
   const [parseError, setParseError] = useState(false);
-  const scaleAnim = useRef<{ [key: number]: Animated.Value }>({});
+  const animRef = useRef<Record<number, Animated.Value>>({});
 
+  // initialize
   useEffect(() => {
-    // Initialize per-item state
-    const initLoad: { [key: number]: boolean } = {};
-    const initScale: { [key: number]: number } = {};
-    const initAlt: { [key: number]: boolean } = {};
-    gallery.forEach(img => {
-      initLoad[img.id] = true;
-      initScale[img.id] = 1;
-      initAlt[img.id] = false;
+    const initAlt: Record<number, boolean> = {};
+    const initScale: Record<number, number> = {};
+    const initLoad: Record<number, boolean> = {};
+    const initErr: Record<number, boolean> = {};
+    gallery.forEach(({ id }) => {
+      initAlt[id] = false;
+      initScale[id] = 1;
+      initLoad[id] = false; // not pending
+      initErr[id] = false;
+      animRef.current[id] = new Animated.Value(1);
     });
-    setLoadStatus(initLoad);
+    setIsAlt(initAlt);
     setScaleMap(initScale);
-    setToggleAltImage(initAlt);
+    setLoading(initLoad);
+    setError(initErr);
 
-    // Simulate AI parsing error
+    // simulate AI parse
     try {
       JSON.parse('{ malformed json }');
     } catch {
@@ -54,100 +60,63 @@ export default function ImageGrid() {
     }
   }, []);
 
-  const initAnimValue = (id: number) => {
-    if (!scaleAnim.current[id]) {
-      scaleAnim.current[id] = new Animated.Value(1);
-    }
-    return scaleAnim.current[id];
-  };
-
-  const onImageTap = (id: number) => {
+  const handleTap = (id: number) => {
     if (parseError) return;
     const current = scaleMap[id];
-    const nextScale = Math.min(current * 1.2, 2);
+    const next = Math.min(current * 1.2, 2);
 
     if (current >= 2) {
-      // Reset to 1× and main image
-      setScaleMap(p => ({ ...p, [id]: 1 }));
-      setToggleAltImage(p => ({ ...p, [id]: false }));
-      Animated.timing(initAnimValue(id), { toValue: 1, duration: 300, useNativeDriver: true }).start();
+      // reset
+      setIsAlt(prev => ({ ...prev, [id]: false }));
+      setScaleMap(prev => ({ ...prev, [id]: 1 }));
+      Animated.timing(animRef.current[id], { toValue: 1, duration: 300, useNativeDriver: true }).start();
     } else {
-      // Toggle image version and zoom
-      setToggleAltImage(p => ({ ...p, [id]: !p[id] }));
-      setScaleMap(p => ({ ...p, [id]: nextScale }));
-      setLoadStatus(p => ({ ...p, [id]: true }));
-      Animated.timing(initAnimValue(id), { toValue: nextScale, duration: 300, useNativeDriver: true }).start();
+      setIsAlt(prev => ({ ...prev, [id]: !prev[id] }));
+      setScaleMap(prev => ({ ...prev, [id]: next }));
+      setLoading(prev => ({ ...prev, [id]: true }));
+      Animated.timing(animRef.current[id], { toValue: next, duration: 300, useNativeDriver: true }).start();
     }
   };
 
-  const onImageSuccess = (id: number) => {
-    setErrorFlags(p => ({ ...p, [id]: false }));
-    setLoadStatus(p => ({ ...p, [id]: false }));
+  const onLoad = (id: number) => {
+    setLoading(prev => ({ ...prev, [id]: false }));
+    setError(prev => ({ ...prev, [id]: false }));
   };
-
-  const onImageFail = (id: number) => {
-    setErrorFlags(p => ({ ...p, [id]: true }));
-    setLoadStatus(p => ({ ...p, [id]: false }));
+  const onError = (id: number) => {
+    setLoading(prev => ({ ...prev, [id]: false }));
+    setError(prev => ({ ...prev, [id]: true }));
   };
 
   if (parseError) {
     return (
-      <View style={styles.screen}>
-        <Text style={styles.header}>Error</Text>
-        <Text style={styles.errorMsg}>Unable to parse AI response</Text>
+      <View style={styles.center}>
+        <Text style={styles.errTitle}>Parsing Error</Text>
+        <Text style={styles.errMsg}>Unable to parse AI response</Text>
         <Button title="Retry" onPress={() => setParseError(false)} />
       </View>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.header}>ALIF- Galeri</Text>
-      <Text style={styles.desc}>Tekan gambar untuk toggle & zoom (maks 2 klik)</Text>
-      <View style={styles.wrapper}>
-        {gallery.map(img => {
-          const isAlt = toggleAltImage[img.id];
-          const uri = isAlt ? img.alt : img.main;
-          const scale = scaleMap[img.id];
-          const animVal = initAnimValue(img.id);
-          const loading = loadStatus[img.id];
-          const hasError = errorFlags[img.id];
-
+    <View style={styles.container}>
+      <Stack.Screen options={{ title: 'Image Grid' }} />
+      <Text style={styles.header}>3×3 Interactive Grid</Text>
+      <View style={styles.grid}>
+        {gallery.map(({ id, main, alt }) => {
+          const uri = isAlt[id] ? alt : main;
           return (
-            <TouchableOpacity key={img.id} style={styles.card} onPress={() => onImageTap(img.id)} activeOpacity={0.85}>
-              <Animated.View style={[styles.imageBox, { transform: [{ scale: animVal }] }]}>                
-                {hasError ? (
-                  <View style={styles.errorBox}>
-                    <Text style={styles.errorIcon}>⚠️</Text>
-                    <Text style={styles.errorMsg}>Load gagal</Text>
-                  </View>
+            <TouchableOpacity key={id} style={styles.card} onPress={() => handleTap(id)} activeOpacity={0.8}>
+              <Animated.View style={[styles.box, { transform: [{ scale: animRef.current[id] }] }]}>                
+                {loading[id] && <View style={styles.overlay}><Text>Loading...</Text></View>}
+                {error[id] ? (
+                  <View style={styles.errBox}><Text>⚠️</Text></View>
+                ) : Platform.OS === 'web' ? (
+                  <img src={uri} style={styles.img} onLoad={() => onLoad(id)} onError={() => onError(id)} alt="grid" />
                 ) : (
-                  <>
-                    {loading && (
-                      <View style={styles.loadingBox}>
-                        <Text style={styles.loadingIcon}>🔄</Text>
-                        <Text style={styles.loadingMsg}>Loading...</Text>
-                      </View>
-                    )}
-                    {Platform.OS === "web" ? (
-                      <img src={uri} style={styles.webImg(loading)} onLoad={() => onImageSuccess(img.id)} onError={() => onImageFail(img.id)} alt="" />
-                    ) : (
-                      <Animated.Image source={{ uri }} style={[styles.img, { opacity: loading ? 0 : 1 }]} resizeMode="cover" onLoad={() => onImageSuccess(img.id)} onError={() => onImageFail(img.id)} />
-                    )}
-                  </>
+                  <Animated.Image source={{ uri }} style={[styles.img, loading[id] && { opacity: 0 }]} onLoad={() => onLoad(id)} onError={() => onError(id)} />
                 )}
-
-                {/* Badge scale and ALT label */}
-                {scale > 1 && (
-                  <View style={styles.scaleBadge}>
-                    <Text style={styles.scaleTxt}>{scale.toFixed(1)}×</Text>
-                  </View>
-                )}
-                {isAlt && (
-                  <View style={styles.altLabel}>
-                    <Text style={styles.altTxt}>ALT</Text>
-                  </View>
-                )}
+                {scaleMap[id] > 1 && <View style={styles.badge}><Text style={styles.badgeTxt}>{scaleMap[id].toFixed(1)}×</Text></View>}
+                {isAlt[id] && <View style={styles.altBadge}><Text style={styles.altTxt}>ALT</Text></View>}
               </Animated.View>
             </TouchableOpacity>
           );
@@ -157,23 +126,21 @@ export default function ImageGrid() {
   );
 }
 
+const CARD_SIZE = 100;
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#f1f1f1", paddingTop: 40, alignItems: "center" },
-  header: { fontSize: 22, fontWeight: "700", color: "#222", marginBottom: 8 },
-  desc: { fontSize: 14, color: "#555", textAlign: "center", marginBottom: 20 },
-  wrapper: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", width: 330 },
-  card: { width: 100, height: 100, margin: 5 }, // uniform cell size
-  imageBox: { flex: 1, backgroundColor: "#ccc", borderRadius: 8, overflow: "hidden", justifyContent: "center", alignItems: "center" },
-  img: { width: "100%", height: "100%" },
-  webImg: (loading: boolean) => ({ width: "100%", height: "100%", objectFit: "cover", opacity: loading ? 0 : 1, borderRadius: 8 }),
-  scaleBadge: { position: "absolute", top: 6, right: 6, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 },
-  scaleTxt: { color: "#fff", fontSize: 10, fontWeight: "bold" },
-  altLabel: { position: "absolute", top: 6, left: 6, backgroundColor: "rgba(255,120,0,0.9)", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 },
-  altTxt: { color: "#fff", fontSize: 9, fontWeight: "bold" },
-  errorBox: { flex: 1, backgroundColor: "#fdd", justifyContent: "center", alignItems: "center" },
-  errorIcon: { fontSize: 22 },
-  errorMsg: { fontSize: 14, fontWeight: "bold", color: "#b00", marginTop: 8 },
-  loadingBox: { ...StyleSheet.absoluteFillObject, backgroundColor: "#cce5ff", justifyContent: "center", alignItems: "center" },
-  loadingIcon: { fontSize: 20 },
-  loadingMsg: { fontSize: 10, color: "#004085", fontWeight: "bold" },
+  container: { flex: 1, alignItems: 'center', paddingTop: 40, backgroundColor: '#f9f9f9' },
+  header: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', width: CARD_SIZE * 3 + 10 * 2 },
+  card: { width: CARD_SIZE, height: CARD_SIZE, margin: 5 },
+  box: { flex: 1, borderRadius: 8, overflow: 'hidden', backgroundColor: '#ddd', justifyContent: 'center', alignItems: 'center' },
+  img: { width: '100%', height: '100%', resizeMode: 'cover' },
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.7)', justifyContent: 'center', alignItems: 'center' },
+  errBox: { ...StyleSheet.absoluteFillObject, backgroundColor: '#fee', justifyContent: 'center', alignItems: 'center' },
+  badge: { position: 'absolute', top: 6, right: 6, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 },
+  badgeTxt: { color: '#fff', fontSize: 10 },
+  altBadge: { position: 'absolute', top: 6, left: 6, backgroundColor: 'rgba(255,165,0,0.9)', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 },
+  altTxt: { color: '#fff', fontSize: 10 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  errTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
+  errMsg: { fontSize: 14, color: '#b00', marginBottom: 12 },
 });
