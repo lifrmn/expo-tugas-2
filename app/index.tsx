@@ -188,7 +188,7 @@ export default function ImageGrid() {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.header}>ALIF CIHUy- Galeri</Text>
+      <Text style={styles.header}>ALIF- Galeri</Text>
       <Text style={styles.desc}>Tekan gambar untuk toggle & zoom (maks 2 klik)</Text>
       <View style={styles.wrapper}>{buildGrid()}</View>
     </View>
