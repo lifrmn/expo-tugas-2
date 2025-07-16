@@ -9,11 +9,7 @@ import {
   Button,
 } from "react-native";
 
-type GalleryItem = {
-  id: number;
-  main: string;
-  alt: string;
-};
+type GalleryItem = { id: number; main: string; alt: string };
 
 const gallery: GalleryItem[] = [
   { id: 1, main: "https://i.pinimg.com/736x/75/92/db/7592db5a2192b56c77f264b6dbc08adf.jpg", alt: "https://i.pinimg.com/736x/0e/f2/bc/0ef2bca247bb66f486b0989809d3cabc.jpg" },
@@ -35,13 +31,23 @@ export default function ImageGrid() {
   const [parseError, setParseError] = useState(false);
   const scaleAnim = useRef<{ [key: number]: Animated.Value }>({});
 
-  // Setup initial loading state
+  // Initialize state for each image
   useEffect(() => {
-    const initialLoads: { [key: number]: boolean } = {};
-    gallery.forEach((img) => (initialLoads[img.id] = true));
-    setLoadStatus(initialLoads);
+    const initLoad: { [key: number]: boolean } = {};
+    const initScale: { [key: number]: number } = {};
+    const initAlt: { [key: number]: boolean } = {};
 
-    // Simulate AI parse
+    gallery.forEach((img) => {
+      initLoad[img.id] = true;
+      initScale[img.id] = 1;
+      initAlt[img.id] = false;
+    });
+
+    setLoadStatus(initLoad);
+    setScaleMap(initScale);
+    setToggleAltImage(initAlt);
+
+    // Simulate AI parse error detection
     try {
       JSON.parse("{ malformed json }");
     } catch {
@@ -49,37 +55,41 @@ export default function ImageGrid() {
     }
   }, []);
 
-  const initAnimValue = (id: number): Animated.Value => {
+  const initAnimValue = (id: number) => {
     if (!scaleAnim.current[id]) scaleAnim.current[id] = new Animated.Value(1);
     return scaleAnim.current[id];
   };
 
   const onImageTap = (id: number) => {
     if (parseError) return;
-    const current = scaleMap[id] || 1;
+
+    const current = scaleMap[id];
     const nextScale = Math.min(current * 1.2, 2);
 
     if (current >= 2) {
-      setScaleMap((p) => ({ ...p, [id]: 1 }));
-      setToggleAltImage((p) => ({ ...p, [id]: false }));
+      // Reset to original
+      setScaleMap((prev) => ({ ...prev, [id]: 1 }));
+      setToggleAltImage((prev) => ({ ...prev, [id]: false }));
       Animated.timing(initAnimValue(id), { toValue: 1, duration: 300, useNativeDriver: true }).start();
       return;
     }
 
-    setToggleAltImage((p) => ({ ...p, [id]: !toggleAltImage[id] }));
-    setScaleMap((p) => ({ ...p, [id]: nextScale }));
-    setLoadStatus((p) => ({ ...p, [id]: true }));
+    // Toggle ALT image and update scale
+    setToggleAltImage((prev) => ({ ...prev, [id]: !prev[id] }));
+    setScaleMap((prev) => ({ ...prev, [id]: nextScale }));
+    setLoadStatus((prev) => ({ ...prev, [id]: true }));
+
     Animated.timing(initAnimValue(id), { toValue: nextScale, duration: 300, useNativeDriver: true }).start();
   };
 
   const onImageFail = (id: number) => {
-    setErrorFlags((p) => ({ ...p, [id]: true }));
-    setLoadStatus((p) => ({ ...p, [id]: false }));
+    setErrorFlags((prev) => ({ ...prev, [id]: true }));
+    setLoadStatus((prev) => ({ ...prev, [id]: false }));
   };
 
   const onImageSuccess = (id: number) => {
-    setErrorFlags((p) => ({ ...p, [id]: false }));
-    setLoadStatus((p) => ({ ...p, [id]: false }));
+    setErrorFlags((prev) => ({ ...prev, [id]: false }));
+    setLoadStatus((prev) => ({ ...prev, [id]: false }));
   };
 
   if (parseError) {
@@ -98,9 +108,9 @@ export default function ImageGrid() {
       <Text style={styles.desc}>Tekan gambar untuk toggle & zoom (maks 2 klik)</Text>
       <View style={styles.wrapper}>
         {gallery.map((img) => {
-          const showAlt = toggleAltImage[img.id] || false;
+          const showAlt = toggleAltImage[img.id];
           const uri = showAlt ? img.alt : img.main;
-          const scale = scaleMap[img.id] || 1;
+          const scale = scaleMap[img.id];
           const anim = initAnimValue(img.id);
           const pending = loadStatus[img.id];
           const err = errorFlags[img.id];
@@ -129,6 +139,7 @@ export default function ImageGrid() {
                   </>
                 )}
 
+                {/* Badge skala dan label ALT */}
                 {scale > 1 && (
                   <View style={styles.scaleBadge}>
                     <Text style={styles.scaleTxt}>{scale.toFixed(1)}x</Text>
